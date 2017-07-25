@@ -1,0 +1,89 @@
+from vb2py.vbfunctions import *
+
+
+
+def Main():
+    xlApp = CreateObject('Excel.Application')
+    basePath = Application.ActiveDocument.Path
+    wb = xlApp.Workbooks.Open(basePath + '\\WVCountyData_Combined_Final.xlsm')
+    ws = wb.Sheets('Tables')
+    countyNames = wb.Names('County').RefersToRange
+    #for testing a single count uncomment the next two lines and comment the "For Each" and "Next" lines below
+    #Dim county As String
+    # county = "Wayne"
+    for county in countyNames:
+        Call(ReplaceCountyTitles(county))
+        Call(ReplaceFigures(county, basePath))
+        Call(UpdateAllTables(ws, county))
+        # MsgBox county
+        _with0 = ActiveDocument
+        if Dir(basePath + 'CountyProfiles\\Pub', vbDirectory) == '':
+            MkDir(basePath + 'CountyProfiles\\Pub')
+        _with0.SaveAs(Filename=basePath + 'CountyProfiles\\Pub\\' + county + '_County_FoodSecurityProfile_WVFoodlink_2015.pub')
+    wb.Close(savechanges=False)
+    _with1 = ActiveDocument
+    _with1.SaveAs(Filename='Master_FoodSecurityProfile_WVFoodlink_2015.pub')
+
+def ReplaceCountyTitles(countyName):
+    # Replace County Name on Master Sheet Header
+    ActiveDocument.Pages[1].Master.Shapes[4].TextFrame.TextRange.text = countyName + ' County' + vbCrLf + 'Food Security Profile'
+    # Replace County Name on First Page Header (First page does not use master)
+    ActiveDocument.Pages[1].Shapes[4].TextFrame.TextRange.text = countyName + ' County'
+
+def ReplaceFigures(countyName, basePath):
+    # replace Graph on page 1 in top left (files not yet generated)
+    ActiveDocument.Pages(1).Shapes(5).PictureFormat.Replace(( basePath + 'Graphs\\' + countyName + 'County_RadarChart.png' ))
+    # replace Graph on page 4 in bottom left
+    ActiveDocument.Pages(4).Shapes(3).PictureFormat.Replace(( basePath + 'Graphs\\' + countyName + 'County_PopulationPyramid.png' ))
+    # replace Graph on page 4 in bottom right
+    ActiveDocument.Pages(4).Shapes(4).PictureFormat.Replace(( basePath + 'Graphs\\' + countyName + 'County_WIC_Eligibility.png' ))
+    # replace Graph on page 5 in bottom center
+    ActiveDocument.Pages(5).Shapes(1).PictureFormat.Replace(( basePath + 'Graphs\\' + countyName + 'County_RetailLocations2015.png' ))
+    # replace Graph on page 6 in bottom left
+    ActiveDocument.Pages(6).Shapes(2).PictureFormat.Replace(( basePath + 'Graphs\\' + countyName + 'County_SchoolMeal_Eligibility.png' ))
+    # replace Graph on page 3 in bottom right
+    ActiveDocument.Pages(6).Shapes(3).PictureFormat.Replace(( basePath + 'Graphs\\' + countyName + 'County_SchoolMeal_Participation.png' ))
+    # replace Graph on page 8 in top left
+    ActiveDocument.Pages(8).Shapes(1).PictureFormat.Replace(( basePath + 'Graphs\\' + countyName + 'County_EmploymentSector2014.png' ))
+    # replace Graph on page 8 in top right
+    ActiveDocument.Pages(8).Shapes(2).PictureFormat.Replace(( basePath + 'Graphs\\' + countyName + 'County_SectorAveWages2014.png' ))
+    # replace Graph on page 8 in bottom center
+    ActiveDocument.Pages(8).Shapes(4).PictureFormat.Replace(( basePath + 'Graphs\\' + countyName + 'County_EmploymentSectorChange19902013.png' ))
+    # replace Map on page 1 in top right
+    ActiveDocument.Pages(1).Shapes(6).PictureFormat.Replace(( basePath + 'Maps\\IconMaps\\' + countyName + 'County_Icon_2015.png' ))
+    # replace Map on page 2 in top center
+    ActiveDocument.Pages(2).Shapes(2).PictureFormat.Replace(( basePath + 'Maps\\AccessMaps\\' + countyName + 'County_Access_2015.png' ))
+    # replace Map on page 3 in top center
+    ActiveDocument.Pages(3).Shapes(2).PictureFormat.Replace(( basePath + 'Maps\\AssistanceMaps\\' + countyName + 'County_Assistance_2015.png' ))
+    # replace Map on page 5 in top center
+    ActiveDocument.Pages(5).Shapes(3).PictureFormat.Replace(( basePath + 'Maps\\SnapRetailersMaps\\' + countyName + 'County_SnapRetailers_2015.png' ))
+    # replace Map on page 7 in top center
+    ActiveDocument.Pages(7).Shapes(3).PictureFormat.Replace(( basePath + 'Maps\\PovertyMaps\\' + countyName + 'County_Poverty_2015.png' ))
+
+def UpdateAllTables(ws, county):
+    #set county in excel
+    ws.Cells[2, 2].Value = county
+    # Call Format UpdateSingleTable(ws, pg, shp, xlRowStart, xlColStart)
+    #Page 1, Table 1
+    Call(UpdateSingleTable(ws, 1, 2, 'C4', 'E28'))
+    #Page 1, Table2
+    Call(UpdateSingleTable(ws, 1, 3, 'G4', 'H25'))
+    #Page 3, Table1
+    Call(UpdateSingleTable(ws, 3, 3, 'C44', 'G49'))
+    #Page 4, Table1
+    Call(UpdateSingleTable(ws, 4, 2, 'C73', 'G84'))
+    #Page 6, Table1
+    Call(UpdateSingleTable(ws, 6, 4, 'C221', 'E231'))
+    #Page 7, Table 1
+    Call(UpdateSingleTable(ws, 7, 1, 'C107', 'F111'))
+
+def UpdateSingleTable(ws, pg, shp, xlStart, xlEnd):
+    i = 0
+    j = 0
+    k = 0
+    tableLocation = xlStart + ':' + xlEnd
+    for tableCell in ActiveDocument.Pages(pg).Shapes(shp).Table.Cells:
+        j = j + 1
+        k = k + 1
+        ActiveDocument.Pages[pg].Shapes[shp].Table.Cells.Item[j].TextRange = ws.Range(tableLocation)(k).text
+        k = k + ws.Range(tableLocation)(k).MergeArea.Cells.Count - 1
