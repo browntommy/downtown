@@ -1,0 +1,14 @@
+#a place for creating a react js interface for a weather app
+#firefly
+
+
+var User location (x, y)
+
+Infrared hot spot consumed as REST service 
+var hotSpot location (x, y)
+
+Query user location
+
+if user = proximity (1mile)
+else send notification print 'There is a fire near your location' 
+
